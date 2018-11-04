@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+       - cd
+       - env
+       - chmod +x /root/build.sh
+       - /root/build.sh
+       - env
+artifacts:
+  files:
+     - /root/release/*
+     - /root/distname
+     - /root/os
+  discard-paths: yes
+  name: $(cat /root/distname)-$(cat /root/os).zip
