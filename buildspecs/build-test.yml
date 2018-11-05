@@ -1,0 +1,17 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+       - ls
+       - md5sum --check *.md5sum
+       - sha256sum --check *.sha256sum
+       - ls
+artifacts:
+  files:
+     - ./*
+  discard-paths: yes
+  #base-directory: location
+#cache:
+  #paths:
+    # - paths
