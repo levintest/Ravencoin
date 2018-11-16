@@ -163,7 +163,7 @@ public:
         // Create the gradient rect to draw the gradient over
         QRect gradientRect = mainRect;
         gradientRect.setTop(gradientRect.top() + 2);
-        gradientRect.setBottom(gradientRect.bottom() - 2);
+        gradientRect.setBottom(gradientRect.bottom() - 11);
         gradientRect.setRight(gradientRect.right() - 20);
 
         int halfheight = (gradientRect.height() - 2*ypad)/2;
@@ -176,10 +176,15 @@ public:
         // Create the gradient for the asset items
         QLinearGradient gradient(mainRect.topLeft(), mainRect.bottomRight());
 
+
+        QColor shadowColor = COLOR_LIGHT_BLUE;
         // Select the color of the gradient
         if (index.data(AssetTableModel::AdministratorRole).toBool()) {
             gradient.setColorAt(0, COLOR_DARK_ORANGE);
             gradient.setColorAt(1, COLOR_LIGHT_ORANGE);
+
+            shadowColor = COLOR_LIGHT_ORANGE;
+
         } else {
             gradient.setColorAt(0, COLOR_LIGHT_BLUE);
             gradient.setColorAt(1, COLOR_DARK_BLUE);
@@ -192,6 +197,24 @@ public:
         // Paint the gradient
         painter->setRenderHint(QPainter::Antialiasing);
         painter->fillPath(path, gradient);
+
+
+        QPen oldPen = painter->pen();
+        qreal oldOpac = painter->opacity();
+        QPen shadow(shadowColor, 3, Qt::SolidLine, Qt::FlatCap, Qt::RoundJoin);
+        painter->setPen(shadow);
+        painter->setOpacity(0.25);
+
+        QPainterPath roundRectShadow;
+        roundRectShadow.moveTo(gradientRect.left() + 4, gradientRect.bottomLeft().y() + 2); // Move to bottom left
+        roundRectShadow.lineTo(gradientRect.right() - 4, gradientRect.bottomRight().y() + 2); // Draw left -> right line
+        roundRectShadow.arcTo(gradientRect.right() - 4, gradientRect.bottomRight().y() - 6, 6.0, 6.0, 270, 90); // Draw arc
+        roundRectShadow.lineTo(gradientRect.right() + 2, gradientRect.topRight().y() + 4); // Draw bottom -> top line
+
+        painter->drawPath(roundRectShadow);
+        painter->setPen(oldPen);
+        painter->setOpacity(oldOpac);
+
 
         /** Draw asset administrator icon */
         if (nIconSize)
@@ -246,7 +269,7 @@ public:
 
     inline QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const
     {
-        return QSize(42, 42);
+        return QSize(42, 60);
     }
 
     int unit;
@@ -255,7 +278,7 @@ public:
 };
 #include "overviewpage.moc"
 #include "ravengui.h"
-
+#include <QFontDatabase>
 OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
     ui(new Ui::OverviewPage),
@@ -316,8 +339,13 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui->frame->setStyleSheet(QString(".QFrame {background-color: %1; padding-bottom: 10px; padding-right: 5px;}").arg(platformStyle->WidgetBackGroundColor().name()));
     ui->frame_2->setStyleSheet(QString(".QFrame {background-color: %1; padding-left: 5px;}").arg(platformStyle->WidgetBackGroundColor().name()));
 
-    ui->verticalLayout_2->setSpacing(10);
-    ui->verticalLayout_3->setSpacing(10);
+    ui->verticalLayout_2->setSpacing(34);
+    ui->verticalLayout_3->setSpacing(34);
+
+    auto list = QFontDatabase().families();
+
+    for (auto item : list)
+        qDebug() << item;
 
     /** Create the shadow effects on the frames */
     ui->assetFrame->setGraphicsEffect(GUIUtil::getShadowEffect());

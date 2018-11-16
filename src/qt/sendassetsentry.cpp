@@ -421,7 +421,7 @@ void SendAssetsEntry::switchAdministratorList(bool fSwitchStatus)
         ui->administratorCheckbox->setChecked(true);
         if (!AssetControlDialog::assetControl->HasAssetSelected()) {
             std::vector<std::string> names;
-            GetAllAdministrativeAssets(model->getWallet(), names, 0);
+            GetAllAdministrativeAssetNames(model->getWallet(), names, 0);
 
             QStringList list;
             list << "";
@@ -437,7 +437,7 @@ void SendAssetsEntry::switchAdministratorList(bool fSwitchStatus)
         }
 
         ui->payAssetAmount->setUnit(MIN_UNIT);
-        ui->payAssetAmount->setValue(OWNER_ASSET_AMOUNT);
+        ui->payAssetAmount->setValue(1); // Need to use 1, and not 1 * COIN because the way that asset amounts are formatted in AssetAmountField
         ui->payAssetAmount->setDisabled(true);
 
 
@@ -450,7 +450,7 @@ void SendAssetsEntry::switchAdministratorList(bool fSwitchStatus)
         ui->administratorCheckbox->setChecked(false);
         if (!AssetControlDialog::assetControl->HasAssetSelected()) {
             std::vector<std::string> names;
-            GetAllMyAssets(model->getWallet(), names, 0);
+            GetAllMyAssetNames(model->getWallet(), names, 0);
             QStringList list;
             list << "";
             for (auto name : names) {

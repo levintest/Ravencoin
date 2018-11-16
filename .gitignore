@@ -1,7 +1,7 @@
 buildspecs
 Jenkinsfile
 *.tar.gz
-
+*.autosave
 *.exe
 src/raven
 src/ravend

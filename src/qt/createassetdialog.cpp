@@ -1172,7 +1172,7 @@ void CreateAssetDialog::updateAssetList()
     list << "";
 
     std::vector<std::string> names;
-    GetAllAdministrativeAssets(model->getWallet(), names, 0);
+    GetAllAdministrativeAssetNames(model->getWallet(), names, 0);
     for (auto item : names) {
         std::string name = QString::fromStdString(item).split("!").first().toStdString();
         if (name.size() != 30)

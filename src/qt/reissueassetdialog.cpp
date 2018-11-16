@@ -1122,7 +1122,7 @@ void ReissueAssetDialog::updateAssetsList()
 {
     LOCK(cs_main);
     std::vector<std::string> assets;
-    GetAllAdministrativeAssets(model->getWallet(), assets, 0);
+    GetAllAdministrativeAssetNames(model->getWallet(), assets, 0);
 
     QStringList list;
     list << "";

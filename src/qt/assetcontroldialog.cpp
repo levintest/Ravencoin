@@ -793,9 +793,9 @@ void AssetControlDialog::updateAssetList(bool fSetOnStart)
     // Get the assets
     std::vector<std::string> assets;
     if (showAdministrator)
-        GetAllAdministrativeAssets(model->getWallet(), assets, 0);
+        GetAllAdministrativeAssetNames(model->getWallet(), assets, 0);
     else
-        GetAllMyAssets(model->getWallet(), assets, 0);
+        GetAllMyAssetNames(model->getWallet(), assets, 0);
 
     QStringList list;
     list << "";

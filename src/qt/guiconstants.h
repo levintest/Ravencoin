@@ -62,13 +62,17 @@ static const bool DEFAULT_SPLASHSCREEN = true;
 /* Widget background color, dark mode */
 #define COLOR_WIDGET_BACKGROUND_DARK QColor("#1c2535")
 /* Ravencoin shadow color - dark mode */
-#define COLOR_SHADOW_DARK QColor(33,80,181)
+#define COLOR_SHADOW_DARK QColor("#0C1B3D") // 21,52,118
 /* Ravencoin Light blue - dark mode - dark mode */
 #define COLOR_LIGHT_BLUE_DARK QColor("#2b374b")
 /* Ravencoin Dark blue - dark mode - dark mode */
 #define COLOR_DARK_BLUE_DARK QColor("#1c2535")
 /* Pricing widget background color */
 #define COLOR_PRICING_WIDGET QColor("#171f2d")
+/* Ravencoin Dark orange - dark mode - dark mode */
+#define COLOR_DARK_ORANGE_DARK QColor("#cf6e2d")
+/* Ravencoin Light orange - dark mode - dark mode */
+#define COLOR_LIGHT_ORANGE_DARK QColor("#ff832a")
 
 
 

@@ -475,7 +475,7 @@ SendAssetsEntry *AssetsDialog::addEntry()
     LOCK(cs_main);
     std::vector<std::string> assets;
     if (model)
-        GetAllMyAssets(model->getWallet(), assets, 0);
+        GetAllMyAssetNames(model->getWallet(), assets, 0);
     else // If the model isn't present. Grab the list of assets that the cache thinks you own
         GetAllMyAssetsFromCache(assets);
 

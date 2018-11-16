@@ -212,12 +212,18 @@ QColor PlatformStyle::DarkBlueColor() const
 
 QColor PlatformStyle::LightOrangeColor() const
 {
+    if (darkModeEnabled)
+        return COLOR_LIGHT_ORANGE;
+    else
         return COLOR_LIGHT_ORANGE;
 }
 
 QColor PlatformStyle::DarkOrangeColor() const
 {
-    return COLOR_DARK_ORANGE;
+    if (darkModeEnabled)
+        return COLOR_DARK_ORANGE;
+    else
+        return COLOR_DARK_ORANGE;
 }
 
 QColor PlatformStyle::SingleColor() const
