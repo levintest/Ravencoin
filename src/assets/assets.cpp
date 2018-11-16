@@ -2321,15 +2321,16 @@ bool GetAssetData(const CScript& script, CAssetOutputEntry& data)
     return false;
 }
 
-void GetAllAdministrativeAssets(CWallet *pwallet, std::vector<std::string> &names, int nMinConf)
+void GetAllAdministrativeAssetNames(CWallet *pwallet, std::vector<std::string> &names, int nMinConf)
 {
     if(!pwallet)
         return;
 
-    GetAllMyAssets(pwallet, names, nMinConf, true, true);
+    GetAllMyAssetNames(pwallet, names, nMinConf, true, true);
 }
 
-void GetAllMyAssets(CWallet* pwallet, std::vector<std::string>& names, int nMinConf, bool fIncludeAdministrator, bool fOnlyAdministrator)
+void GetAllMyAssetNames(CWallet *pwallet, std::vector<std::string> &names, int nMinConf, bool fIncludeAdministrator,
+                        bool fOnlyAdministrator)
 {
     if(!pwallet)
         return;
@@ -2435,7 +2436,7 @@ std::string GetBurnAddress(const AssetType type)
     }
 }
 
-//! This will get the amount that an address for a certain asset contains from the database if they cache doesn't already have it
+//! This will get the amount that an address for a certain asset contains from the database if the cache doesn't already have it
 bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetName, const std::string& address)
 {
     auto pair = make_pair(assetName, address);
@@ -2456,8 +2457,15 @@ bool GetBestAssetAddressAmount(CAssetsCache& cache, const std::string& assetName
 }
 
 //! sets _assetNames_ to the set of names of owned assets
-bool GetMyOwnedAssets(CAssetsCache& cache, std::vector<std::string>& assetNames) {
-    for (auto const& entry : cache.mapMyUnspentAssets) {
+bool GetMyOwnedAssets(CAssetsCache& cache, std::vector<std::string>& assetNames)
+{
+    if (vpwallets.size() == 0)
+        return false;
+
+    std::map<std::string, std::vector<COutput> > mapAssets;
+    vpwallets[0]->AvailableAssets(mapAssets);
+
+    for (auto const& entry : mapAssets) {
         assetNames.push_back(entry.first);
     }
 
@@ -2465,36 +2473,52 @@ bool GetMyOwnedAssets(CAssetsCache& cache, std::vector<std::string>& assetNames)
 }
 
 //! sets _assetNames_ to the set of names of owned assets that start with _prefix_
-bool GetMyOwnedAssets(CAssetsCache& cache, const std::string prefix, std::vector<std::string>& assetNames) {
-    for (auto const& entry : cache.mapMyUnspentAssets)
+bool GetMyOwnedAssets(CAssetsCache& cache, const std::string prefix, std::vector<std::string>& assetNames)
+{
+    if (vpwallets.size() == 0)
+        return false;
+
+    std::map<std::string, std::vector<COutput> > mapAssets;
+    vpwallets[0]->AvailableAssets(mapAssets);
+
+    for (auto const& entry : mapAssets) {
         if (entry.first.find(prefix) == 0)
             assetNames.push_back(entry.first);
+    }
 
     return true;
 }
 
 //! sets _balance_ to the total quantity of _assetName_ owned across all addresses
-bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmount& balance) {
+bool GetMyAssetBalance(CAssetsCache& cache, const std::string& assetName, CAmount& balance)
+{
+    if (vpwallets.size() == 0)
+        return false;
+
     balance = 0;
-    for (auto const& address : cache.mapAssetsAddresses[assetName]) {
-        if (vpwallets.size() == 0)
-            return false;
+    std::map<std::string, std::vector<COutput> > mapAssets;
+    vpwallets[0]->AvailableAssets(mapAssets);
 
-        if (IsMine(*vpwallets[0], DecodeDestination(address), SIGVERSION_BASE) & ISMINE_ALL) {
-            if (!GetBestAssetAddressAmount(cache, assetName, address)) {
-                return false;
-            }
+    if (!mapAssets.count(assetName))
+        return true;
 
-            auto amt = cache.mapAssetsAddressAmount[make_pair(assetName, address)];
-            balance += amt;
-        }
+    auto outs = mapAssets.at(assetName);
+
+    for (auto out : outs) {
+        std::string name;
+        CAmount amount;
+        if(!GetAssetInfoFromScript(out.tx->tx->vout[out.i].scriptPubKey, name, amount))
+            LogPrintf("Failed to get asset info from COutput: %s\n", out.ToString());
+
+        balance += amount;
     }
 
     return true;
 }
 
 //! sets _balances_ with the total quantity of each asset in _assetNames_
-bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances) {
+bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& assetNames, std::map<std::string, CAmount>& balances)
+{
     for (auto const& assetName : assetNames) {
         CAmount balance;
         if (!GetMyAssetBalance(cache, assetName, balance))
@@ -2509,7 +2533,8 @@ bool GetMyAssetBalances(CAssetsCache& cache, const std::vector<std::string>& ass
 }
 
 //! sets _balances_ with the total quantity of each owned asset
-bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances) {
+bool GetMyAssetBalances(CAssetsCache& cache, std::map<std::string, CAmount>& balances)
+{
     std::vector<std::string> assetNames;
     if (!GetMyOwnedAssets(cache, assetNames))
         return false;

@@ -366,8 +366,9 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey);
 
 bool IsNewOwnerTxValid(const CTransaction& tx, const std::string& assetName, const std::string& address, std::string& errorMsg);
 
-void GetAllAdministrativeAssets(CWallet *pwallet, std::vector<std::string> &names, int nMinConf = 1);
-void GetAllMyAssets(CWallet* pwallet, std::vector<std::string>& names, int nMinConf = 1, bool fIncludeAdministrator = false, bool fOnlyAdministrator = false);
+void GetAllAdministrativeAssetNames(CWallet *pwallet, std::vector<std::string> &names, int nMinConf = 1);
+void GetAllMyAssetNames(CWallet *pwallet, std::vector<std::string> &names, int nMinConf = 1,
+                        bool fIncludeAdministrator = false, bool fOnlyAdministrator = false);
 /** TO BE USED ONLY ON STARTUP */
 void GetAllMyAssetsFromCache(std::vector<std::string>& names);
 

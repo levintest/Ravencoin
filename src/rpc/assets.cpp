@@ -595,53 +595,67 @@ UniValue listmyassets(const JSONRPCRequest &request)
     safe_advance(end, balances.end(), count);
 
     // generate output
+
     UniValue result(UniValue::VOBJ);
     if (verbose) {
+        std::map<std::string, std::vector<COutput> > mapAssets;
+        pwallet->AvailableAssets(mapAssets);
         for (; bal != end && bal != balances.end(); bal++) {
             UniValue asset(UniValue::VOBJ);
             asset.push_back(Pair("balance", UnitValueFromAmount(bal->second, bal->first)));
 
             UniValue outpoints(UniValue::VARR);
-            for (auto const& out : passets->mapMyUnspentAssets[bal->first]) {
+
+            if (!mapAssets.count(bal->first)) {
+                continue;
+            }
+
+            auto vec = mapAssets.at(bal->first);
+
+            for (auto const& out : vec) {
                 UniValue tempOut(UniValue::VOBJ);
-                tempOut.push_back(Pair("txid", out.hash.GetHex()));
-                tempOut.push_back(Pair("vout", (int)out.n));
+                tempOut.push_back(Pair("txid", out.tx->GetHash().GetHex()));
+                tempOut.push_back(Pair("vout", (int)out.i));
 
                 //
                 // get amount for this outpoint
                 CAmount txAmount = 0;
-                auto it = pwallet->mapWallet.find(out.hash);
+                auto it = pwallet->mapWallet.find(out.tx->GetHash());
                 if (it == pwallet->mapWallet.end()) {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid or non-wallet transaction id");
                 }
                 const CWalletTx& wtx = it->second;
-                CTxOut txOut = wtx.tx->vout[out.n];
-                std::string strAddress;
-                if (CheckIssueDataTx(txOut)) {
-                    CNewAsset asset;
-                    if (!AssetFromScript(txOut.scriptPubKey, asset, strAddress))
-                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
-                    txAmount = asset.nAmount;
+                CTxOut txOut = wtx.tx->vout[out.i];
+                CAssetOutputEntry entry;
+                if (!GetAssetData(out.tx->tx->vout[out.i].scriptPubKey, entry)) {
+                    throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Failed ot get asset data from script, COutput: %s", out.ToString()));
                 }
-                else if (CheckReissueDataTx(txOut)) {
-                    CReissueAsset asset;
-                    if (!ReissueAssetFromScript(txOut.scriptPubKey, asset, strAddress))
-                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
-                    txAmount = asset.nAmount;
-                }
-                else if (CheckTransferOwnerTx(txOut)) {
-                    CAssetTransfer asset;
-                    if (!TransferAssetFromScript(txOut.scriptPubKey, asset, strAddress))
-                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
-                    txAmount = asset.nAmount;
-                }
-                else if (CheckOwnerDataTx(txOut)) {
-                    std::string assetName;
-                    if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, strAddress))
-                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
-                    txAmount = OWNER_ASSET_AMOUNT;
-                }
-                tempOut.push_back(Pair("amount", UnitValueFromAmount(txAmount, bal->first)));
+//                if (CheckIssueDataTx(txOut)) {
+//                    CNewAsset asset;
+//                    if (!AssetFromScript(txOut.scriptPubKey, asset, strAddress))
+//                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
+//                    txAmount = asset.nAmount;
+//                }
+//                else if (CheckReissueDataTx(txOut)) {
+//                    CReissueAsset asset;
+//                    if (!ReissueAssetFromScript(txOut.scriptPubKey, asset, strAddress))
+//                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
+//                    txAmount = asset.nAmount;
+//                }
+//                else if (CheckTransferOwnerTx(txOut)) {
+//                    CAssetTransfer asset;
+//                    if (!TransferAssetFromScript(txOut.scriptPubKey, asset, strAddress))
+//                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
+//                    txAmount = asset.nAmount;
+//                }
+//                else if (CheckOwnerDataTx(txOut)) {
+//                    std::string assetName;
+//                    if (!OwnerAssetFromScript(txOut.scriptPubKey, assetName, strAddress))
+//                        throw JSONRPCError(RPC_INTERNAL_ERROR, "Couldn't get asset from script.");
+//                    txAmount = OWNER_ASSET_AMOUNT;
+//                }
+                tempOut.push_back(Pair("amount", UnitValueFromAmount(entry.nAmount, bal->first)));
+                tempOut.push_back(Pair("address", EncodeDestination(entry.destination)));
                 //
                 //
 
