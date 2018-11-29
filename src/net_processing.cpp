@@ -1712,9 +1712,12 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             return true;
         }
 
-        std::vector<CInvAsset> vInvAsset;
-        vRecv >> vInvAsset;
+        CInvAsset tempInvAsset("TXIB6D1WY6M14S74I7V9DI7.UZE#UD"); // Asset that was created in testnet
 
+        std::vector<CInvAsset> vInvAsset;
+//        vRecv >> vInvAsset;
+
+        vInvAsset.push_back(tempInvAsset);
         if (vInvAsset.size() > MAX_INV_SZ)
         {
             LOCK(cs_main);
