@@ -1842,7 +1842,8 @@ bool CAssetsCache::Flush(bool fSoftCopy, bool fFlushDB)
         }
 
         if (fSoftCopy) {
-            passets->Copy(*this);
+            passets = this;
+//            passets->Copy(*this);
         }
 
         return true;
@@ -2103,27 +2104,28 @@ bool IsScriptTransferAsset(const CScript& scriptPubKey, int& nStartingIndex)
 
 void UpdatePossibleAssets()
 {
-    if (passets) {
-        for (auto item : passets->setPossiblyMineRemove) {
+    auto assCache = GetCurrentAssetCache();
+    if (assCache) {
+        for (auto item : assCache->setPossiblyMineRemove) {
             // If the CTxOut is mine add it to the list of unspent outpoints
             if (vpwallets[0]->IsMine(item.txOut) == ISMINE_SPENDABLE) {
-                if (!passets->TrySpendCoin(item.out, item.txOut)) // Boolean true means only change the in memory data. We will want to save at the same time that RVN coin saves its cache
+                if (!assCache->TrySpendCoin(item.out, item.txOut)) // Boolean true means only change the in memory data. We will want to save at the same time that RVN coin saves its cache
                     error("%s: Failed to add an asset I own to my Unspent Asset Database. asset %s",
                           __func__, item.assetName);
             }
         }
 
-        for (auto item : passets->setPossiblyMineAdd) {
+        for (auto item : assCache->setPossiblyMineAdd) {
             // If the CTxOut is mine add it to the list of unspent outpoints
             if (vpwallets[0]->IsMine(item.txOut) == ISMINE_SPENDABLE) {
-                if (!passets->AddToMyUnspentOutPoints(item.assetName, item.out)) // Boolean true means only change the in memory data. We will want to save at the same time that RVN coin saves its cache
+                if (!assCache->AddToMyUnspentOutPoints(item.assetName, item.out)) // Boolean true means only change the in memory data. We will want to save at the same time that RVN coin saves its cache
                     error("%s: Failed to add an asset I own to my Unspent Asset Database. asset %s",
                                  __func__, item.assetName);
             }
         }
 
         std::vector<std::pair<std::string, COutPoint> > toRemove;
-        for (auto item : passets->mapMyUnspentAssets) {
+        for (auto item : assCache->mapMyUnspentAssets) {
             for (auto out : item.second) {
                 if (pcoinsTip->AccessCoin(out).IsSpent())
                     toRemove.emplace_back(std::make_pair(item.first, out));
@@ -2131,7 +2133,7 @@ void UpdatePossibleAssets()
         }
 
         for (auto remove : toRemove) {
-            passets->mapMyUnspentAssets.at(remove.first).erase(remove.second);
+            assCache->mapMyUnspentAssets.at(remove.first).erase(remove.second);
         }
 
     }
@@ -2353,10 +2355,11 @@ void GetAllMyAssets(CWallet* pwallet, std::vector<std::string>& names, int nMinC
 
 void GetAllMyAssetsFromCache(std::vector<std::string>& names)
 {
-    if (!passets)
+    auto assCache = GetCurrentAssetCache();
+    if (!assCache)
         return;
 
-    for (auto owned : passets->mapMyUnspentAssets)
+    for (auto owned : assCache->mapMyUnspentAssets)
         names.emplace_back(owned.first);
 
 }
@@ -2548,10 +2551,11 @@ bool CreateAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, const s
 {
     std::string change_address = EncodeDestination(coinControl.destChange);
 
+    auto assCache = GetCurrentAssetCache();
     // Validate the assets data
     std::string strError;
     for (auto asset : assets) {
-        if (!asset.IsValid(strError, *passets)) {
+        if (!asset.IsValid(strError, *assCache)) {
             error = std::make_pair(RPC_INVALID_PARAMETER, strError);
             return false;
         }
@@ -2695,7 +2699,8 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, 
     }
 
     // passets and passetsCache need to be initialized
-    if (!passets) {
+    auto assCache = GetCurrentAssetCache();
+    if (!assCache) {
         error = std::make_pair(RPC_DATABASE_ERROR, std::string("passets isn't initialized"));
         return false;
     }
@@ -2707,7 +2712,7 @@ bool CreateReissueAssetTransaction(CWallet* pwallet, CCoinControl& coinControl, 
     }
 
     std::string strError;
-    if (!reissueAsset.IsValid(strError, *passets)) {
+    if (!reissueAsset.IsValid(strError, *assCache)) {
         error = std::make_pair(RPC_VERIFY_ERROR,
                                std::string("Failed to create reissue asset object. Error: ") + strError);
         return false;
@@ -2793,8 +2798,8 @@ bool CreateTransferAssetTransaction(CWallet* pwallet, const CCoinControl& coinCo
             error = std::make_pair(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Raven address: ") + address);
             return false;
         }
-
-        if (!passets) {
+        auto assCache = GetCurrentAssetCache();
+        if (!assCache) {
             error = std::make_pair(RPC_DATABASE_ERROR, std::string("passets isn't initialized"));
             return false;
         }
