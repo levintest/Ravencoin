@@ -6,7 +6,7 @@ https://ravencoin.org
 What is Ravencoin?
 ----------------
 
-Ravencoin is an incredible experimental digital currency that enables instant payments to
+Ravencoin is an great experimental digital currency that enables instant payments to
 anyone, anywhere in the world. Ravencoin uses peer-to-peer technology to operate
 with no central authority: managing transactions and issuing money are carried
 out collectively by the network. 
